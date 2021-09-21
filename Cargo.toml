@@ -9,3 +9,5 @@ author = "flareflo"
 [dependencies]
 tar = "0.4.37"
 aes-gcm = "0.9.4"
+argon2 = "0.3.1"
+rand = "0.8.4"
