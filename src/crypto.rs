@@ -17,7 +17,7 @@ pub(crate) struct Entry {
 pub struct EncryptedReturn {
 	pub cipher: Aes256Gcm,
 	pub ciphertext: Vec<u8>,
-	pub salt: SaltString,
+	pub salt: Vec<u8>,
 	pub nonce: [u8; 12],
 }
 
@@ -37,7 +37,7 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> EncryptedReturn {
 	let encryptedreturn = EncryptedReturn {
 		cipher,
 		ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
-		salt,
+		salt: Vec::from(salt.as_bytes()),
 		nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap()
 	};
 	return encryptedreturn
