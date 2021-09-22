@@ -15,7 +15,6 @@ pub(crate) struct Entry {
 }
 
 pub struct EncryptedReturn {
-	pub cipher: Aes256Gcm,
 	pub ciphertext: Vec<u8>,
 	pub salt: Vec<u8>,
 	pub nonce: [u8; 12],
@@ -31,11 +30,7 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> EncryptedReturn {
 	let random_bytes = rand::thread_rng().gen::<[u8; 12]>();
 	let nonce = Nonce::from_slice(&random_bytes);
 
-	let ciphertext = cipher.encrypt(nonce, b"plaintext message".as_ref())
-		.expect("encryption failure!"); // NOTE: handle this error to avoid panics!
-
 	let encryptedreturn = EncryptedReturn {
-		cipher,
 		ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
 		salt: Vec::from(salt.as_bytes()),
 		nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap()
@@ -43,10 +38,11 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> EncryptedReturn {
 	return encryptedreturn
 }
 
-pub fn decrypt(encryptedreturn: EncryptedReturn) -> Vec<u8>{
+pub fn decrypt(encryptedreturn: EncryptedReturn, password:&str) -> Vec<u8>{
 	let nonce = Nonce::from_slice(&encryptedreturn.nonce);
-	let cipher = encryptedreturn.cipher;
+	let password_hash = Argon2::default().hash_password(password.as_bytes(), &String::from_utf8(encryptedreturn.salt).unwrap()).unwrap().hash.unwrap();
+	let cipher = Aes256Gcm::new(Key::from_slice(password_hash.as_bytes()));
 	let ciphertext = encryptedreturn.ciphertext;
-	let decrypted = cipher.decrypt(nonce, ciphertext).unwrap();
+	let decrypted = cipher.decrypt(nonce, ciphertext.as_slice()).unwrap();
 	return decrypted
 }
