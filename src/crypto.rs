@@ -47,3 +47,17 @@ pub fn store(encryptedreturn: Entry) -> Vec<u8> {
 	save.extend_from_slice(&encryptedreturn.ciphertext);
 	return save;
 }
+
+pub fn load(file: Vec<u8>) -> Entry {
+	let salt_and_rest = file.split_at(22);
+	let salt = salt_and_rest.0;
+	let nonce_and_rest = salt_and_rest.1.split_at(12);
+	let nonce = nonce_and_rest.0;
+	let ciphertext = nonce_and_rest.1;
+	let entry = Entry {
+		salt: <[u8; 22]>::try_from(salt).unwrap(),
+		nonce: <[u8; 12]>::try_from(nonce).unwrap(),
+		ciphertext: Vec::from(ciphertext),
+	};
+	return entry
+}
