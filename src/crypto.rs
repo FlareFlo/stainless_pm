@@ -9,9 +9,9 @@ use rand::rngs::OsRng;
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
 pub struct EncryptedReturn {
-	pub ciphertext: Vec<u8>,
 	pub salt: [u8; 22],
 	pub nonce: [u8; 12],
+	pub ciphertext: Vec<u8>,
 }
 
 pub fn encrypt(value: Vec<u8>, password: &str) -> EncryptedReturn {
@@ -25,9 +25,9 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> EncryptedReturn {
 	let nonce = Nonce::from_slice(&random_bytes);
 
 	let encryptedreturn = EncryptedReturn {
-		ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
 		salt: <[u8; 22]>::try_from(salt.as_bytes()).unwrap(),
 		nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap(),
+		ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
 	};
 	return encryptedreturn;
 }
@@ -39,4 +39,12 @@ pub fn decrypt(encryptedreturn: EncryptedReturn, password: &str) -> Vec<u8> {
 	let ciphertext = encryptedreturn.ciphertext;
 	let decrypted = cipher.decrypt(nonce, ciphertext.as_slice()).unwrap();
 	return decrypted;
+}
+
+pub fn store(encryptedreturn: EncryptedReturn) -> Vec<Vec<u8>>{
+	let mut save = Vec::new();
+	save.push(Vec::from(encryptedreturn.salt));
+	save.push(Vec::from(encryptedreturn.nonce));
+	save.push(encryptedreturn.ciphertext);
+	return save
 }
