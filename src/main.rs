@@ -9,5 +9,6 @@ mod crypto;
 fn main() {
 	let yes = encrypt(Vec::from("yes"), "cum");
 	let save = store(yes);
+	fs::write("./save.slpm", &save).unwrap();
 	println!("{:?}", save);
 }
