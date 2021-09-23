@@ -7,5 +7,5 @@ mod crypto;
 
 
 fn main() {
-
+	let yes = encrypt(Vec::from("yeadasdasdsadsadsadss"), "cum");
 }
