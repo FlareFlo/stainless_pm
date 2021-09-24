@@ -1,9 +1,8 @@
 use std::convert::TryFrom;
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
-pub struct HeaderBinary {
+pub struct HeaderBinaryV0 {
 	pub version: [u8; 2],
-	pub length: [u8; 2],
 	pub datatype: [u8; 1],
 
 	pub salt: [u8; 22],
@@ -11,9 +10,8 @@ pub struct HeaderBinary {
 }
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
-pub struct Header {
+pub struct HeaderV0 {
 	pub version: u16,
-	pub length: u16,
 	pub datatype: DataType,
 
 	pub salt: [u8; 22],
@@ -26,16 +24,15 @@ pub enum DataType {
 	File = 1,
 }
 
-impl Header {
-	pub fn pack_header(&self) -> HeaderBinary {
+impl HeaderV0 {
+	pub fn pack_header(&self) -> HeaderBinaryV0 {
 		let datatype_id: u8;
 		match self.datatype {
 			DataType::Password => { datatype_id = 0 }
 			DataType::File => { datatype_id = 1 }
 		}
-		let header_binary = HeaderBinary {
+		let header_binary = HeaderBinaryV0 {
 			version: <[u8; 2]>::try_from(self.version.to_be_bytes()).unwrap(),
-			length: <[u8; 2]>::try_from(self.length.to_be_bytes()).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_id.to_be_bytes()).unwrap(),
 			salt: self.salt,
 			nonce: self.nonce,
@@ -44,20 +41,14 @@ impl Header {
 	}
 }
 
-impl HeaderBinary {
+impl HeaderBinaryV0 {
 	pub fn header_to_bytes(&self) -> Vec<u8> {
 		let mut output = Vec::new();
 		output.extend_from_slice(&self.version);
-		output.extend_from_slice(&self.length);
 		output.extend_from_slice(&self.datatype);
 		output.extend_from_slice(&self.salt);
 		output.extend_from_slice((&self.nonce));
-		let len = u16::from_be_bytes(self.length) as usize;
-		if output.len() <= len {
-			output.resize(len, 0);
-		} else {
-			panic!("Header size exceeded")
-		}
+		output.resize(512, 0);
 		return output;
 
 	}
@@ -69,38 +60,34 @@ impl HeaderBinary {
 		}
 		let header = Self {
 			version: <[u8; 2]>::try_from(version.to_be_bytes()).unwrap(),
-			length: <[u8; 2]>::try_from(length.to_be_bytes()).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_id.to_be_bytes()).unwrap(),
 			salt,
 			nonce,
 		};
 		return header;
 	}
-	pub fn deserialize_binary_v0(binary: Vec<u8>) -> Self {
+	pub fn deserialize_binary(binary: Vec<u8>) -> Self {
 		let version_and_rest = binary.split_at(2);
-		let length_and_rest = version_and_rest.1.split_at(2);
-		let datatype_and_rest = length_and_rest.1.split_at(1);
-		let salt_and_rest = length_and_rest.1.split_at(22);
+		let datatype_and_rest = version_and_rest.1.split_at(1);
+		let salt_and_rest = datatype_and_rest.1.split_at(22);
 		let nonce_and_rest = salt_and_rest.1.split_at(12);
-		let header_binary = HeaderBinary {
+		let header_binary = HeaderBinaryV0 {
 			version: <[u8; 2]>::try_from(version_and_rest.0).unwrap(),
-			length: <[u8; 2]>::try_from(length_and_rest.0).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_and_rest.0).unwrap(),
 			salt: <[u8; 22]>::try_from(salt_and_rest.0).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce_and_rest.0).unwrap(),
 		};
 		return header_binary;
 	}
-	pub fn unpack_header(&self) -> Header {
+	pub fn unpack_header(&self) -> HeaderV0 {
 		let datatype: DataType;
 		match u8::from_be_bytes(self.datatype) {
 			0 => datatype = DataType::Password,
 			1 => datatype = DataType::File,
 			_ => { panic!("Could not detect file type of header") }
 		}
-		let header = Header {
+		let header = HeaderV0 {
 			version: u16::from_be_bytes(self.version),
-			length: u16::from_be_bytes(self.length),
 			datatype,
 			salt: self.salt,
 			nonce: self.nonce,

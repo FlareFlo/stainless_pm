@@ -7,7 +7,7 @@ use argon2::password_hash::SaltString;
 use rand::Rng;
 use rand::rngs::OsRng;
 use std::any::Any;
-use crate::processing::header::Header;
+use crate::processing::headerV0::HeaderV0;
 
 
 pub struct Entry {
@@ -27,7 +27,7 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> Vec<u8> {
 
 	return cipher.encrypt(nonce, value.as_slice()).unwrap()
 }
-pub fn decrypt(encrypted: Entry, header: Header, password: &str) -> Vec<u8> {
+pub fn decrypt(encrypted: Entry, header: HeaderV0, password: &str) -> Vec<u8> {
 	let nonce = Nonce::from_slice(&header.nonce);
 
 	let password_hash = Argon2::default().hash_password(password.as_bytes(), &String::from_utf8(Vec::from(header.salt)).unwrap()).unwrap().hash.unwrap();
