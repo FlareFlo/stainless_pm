@@ -6,15 +6,16 @@ use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::SaltString;
 use rand::Rng;
 use rand::rngs::OsRng;
+use std::any::Any;
+use tar::Header;
 
-#[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
+
 pub struct Entry {
-	pub salt: [u8; 22],
-	pub nonce: [u8; 12],
+	pub header: [u8; 512],
 	pub ciphertext: Vec<u8>,
 }
 
-pub fn encrypt(value: Vec<u8>, password: &str) -> Entry {
+pub fn encrypt(value: Vec<u8>, password: &str) -> Vec<u8> {
 	let salt = SaltString::generate(&mut OsRng);
 
 	let password_hash = Argon2::default().hash_password(password.as_bytes(), &salt).unwrap().hash.unwrap();
@@ -24,40 +25,14 @@ pub fn encrypt(value: Vec<u8>, password: &str) -> Entry {
 	let random_bytes = rand::thread_rng().gen::<[u8; 12]>();
 	let nonce = Nonce::from_slice(&random_bytes);
 
-	let encryptedreturn = Entry {
-		salt: <[u8; 22]>::try_from(salt.as_bytes()).unwrap(),
-		nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap(),
-		ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
-	};
-	return encryptedreturn;
+	return cipher.encrypt(nonce, value.as_slice()).unwrap()
 }
 
-pub fn decrypt(encryptedreturn: Entry, password: &str) -> Vec<u8> {
-	let nonce = Nonce::from_slice(&encryptedreturn.nonce);
-	let password_hash = Argon2::default().hash_password(password.as_bytes(), &String::from_utf8(Vec::from(encryptedreturn.salt)).unwrap()).unwrap().hash.unwrap();
+pub fn decrypt(encrypted: Entry, header: Header, password: &str) -> Vec<u8> {
+	let nonce = Nonce::from_slice(&header.nonce);
+	let password_hash = Argon2::default().hash_password(password.as_bytes(), &String::from_utf8(Vec::from(header.salt)).unwrap()).unwrap().hash.unwrap();
 	let cipher = Aes256Gcm::new(Key::from_slice(password_hash.as_bytes()));
-	let ciphertext = encryptedreturn.ciphertext;
+	let ciphertext = encrypted.ciphertext;
 	let decrypted = cipher.decrypt(nonce, ciphertext.as_slice()).unwrap();
 	return decrypted;
-}
-pub fn store(encryptedreturn: Entry) -> Vec<u8> {
-	let mut save = Vec::new();
-	save.extend_from_slice(&encryptedreturn.salt);
-	save.extend_from_slice(&encryptedreturn.nonce);
-	save.extend_from_slice(&encryptedreturn.ciphertext);
-	return save;
-}
-
-pub fn load(file: Vec<u8>) -> Entry {
-	let salt_and_rest = file.split_at(22);
-	let salt = salt_and_rest.0;
-	let nonce_and_rest = salt_and_rest.1.split_at(12);
-	let nonce = nonce_and_rest.0;
-	let ciphertext = nonce_and_rest.1;
-	let entry = Entry {
-		salt: <[u8; 22]>::try_from(salt).unwrap(),
-		nonce: <[u8; 12]>::try_from(nonce).unwrap(),
-		ciphertext: Vec::from(ciphertext),
-	};
-	return entry
 }

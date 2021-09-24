@@ -1,18 +1,15 @@
-use crate::crypto::{decrypt, encrypt, store, load};
-use std::fs;
 use std::convert::TryInto;
+use std::fs;
 use std::fs::File;
 
+use crate::crypto::{DataType, decrypt, encrypt, pack_header_from_raw, header_to_bytes};
+
 mod crypto;
+mod processing;
 
 
 fn main() {
-	// let yes = encrypt(Vec::from("yes"), "cum");
-	// let save = store(yes);
-	// fs::write("./save.slpm", &save).unwrap();
-	// println!("{:?}", save);
-	let file = fs::read("save.slpm").unwrap();
-	let file_loaded = load(file);
-	let decrypted = decrypt(file_loaded, "cum");
-	eprintln!("decrypted = {:?}", String::from_utf8(decrypted));
+	let header = pack_header_from_raw(0, 512, DataType::Password, *b"salt                  ", *b"nonce       ");
+	let binary_header = header_to_bytes(header);
+	eprintln!("header = {:?}", binary_header.len());
 }
