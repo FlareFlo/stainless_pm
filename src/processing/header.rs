@@ -30,8 +30,8 @@ impl Header {
 	pub fn pack_header(&self) -> HeaderBinary {
 		let datatype_id: u8;
 		match self.datatype {
-			DataType::Password => {datatype_id = 0}
-			DataType::File => {datatype_id = 1}
+			DataType::Password => { datatype_id = 0 }
+			DataType::File => { datatype_id = 1 }
 		}
 		let header_binary = HeaderBinary {
 			version: <[u8; 2]>::try_from(self.version.to_be_bytes()).unwrap(),
@@ -40,12 +40,12 @@ impl Header {
 			salt: self.salt,
 			nonce: self.nonce,
 		};
-		return header_binary
+		return header_binary;
 	}
 }
 
 impl HeaderBinary {
-	pub fn header_to_bytes(&self) -> Vec<u8>{
+	pub fn header_to_bytes(&self) -> Vec<u8> {
 		let mut output = Vec::new();
 		output.extend_from_slice(&self.version);
 		output.extend_from_slice(&self.length);
@@ -55,17 +55,17 @@ impl HeaderBinary {
 		let len = u16::from_be_bytes(self.length) as usize;
 		if output.len() <= len {
 			output.resize(len, 0);
-		}else {
+		} else {
 			panic!("Header size exceeded")
 		}
-		return output
+		return output;
 
 	}
 	pub fn pack_header_from_raw(version: u16, length: u16, datatype: DataType, salt: [u8; 22], nonce: [u8; 12]) -> Self {
 		let datatype_id: u8;
 		match datatype {
-			DataType::Password => {datatype_id = 0}
-			DataType::File => {datatype_id = 1}
+			DataType::Password => { datatype_id = 0 }
+			DataType::File => { datatype_id = 1 }
 		}
 		let header = Self {
 			version: <[u8; 2]>::try_from(version.to_be_bytes()).unwrap(),
@@ -74,7 +74,7 @@ impl HeaderBinary {
 			salt,
 			nonce,
 		};
-		return header
+		return header;
 	}
 	pub fn deserialize_binary_v0(binary: Vec<u8>) -> Self {
 		let version_and_rest = binary.split_at(2);
@@ -89,7 +89,23 @@ impl HeaderBinary {
 			salt: <[u8; 22]>::try_from(salt_and_rest.0).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce_and_rest.0).unwrap(),
 		};
-		return header_binary
+		return header_binary;
+	}
+	pub fn unpack_header(&self) -> Header {
+		let datatype: DataType;
+		match u8::from_be_bytes(self.datatype) {
+			0 => datatype = DataType::Password,
+			1 => datatype = DataType::File,
+			_ => { panic!("Could not detect file type of header") }
+		}
+		let header = Header {
+			version: u16::from_be_bytes(self.version),
+			length: u16::from_be_bytes(self.length),
+			datatype,
+			salt: self.salt,
+			nonce: self.nonce,
+		};
+		return header;
 	}
 }
 
