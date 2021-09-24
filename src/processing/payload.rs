@@ -6,8 +6,7 @@ use argon2::{Argon2, PasswordHasher};
 use argon2::password_hash::SaltString;
 use rand::Rng;
 use rand::rngs::OsRng;
-use std::any::Any;
-use crate::processing::header_v0::{HeaderV0, HeaderBinaryV0};
+use crate::processing::header_v0::{HeaderBinaryV0};
 
 
 pub struct Entry {
@@ -18,7 +17,7 @@ pub struct Entry {
 }
 
 impl Entry {
-	pub fn encrypt(value: Vec<u8>, header: HeaderBinaryV0, password: &str) -> Self {
+	pub fn encrypt(value: &[u8], header: &HeaderBinaryV0, password: &str) -> Self {
 		let salt = SaltString::generate(&mut OsRng);
 
 		let password_hash = Argon2::default().hash_password(password.as_bytes(), &salt).unwrap().hash.unwrap();
@@ -28,14 +27,12 @@ impl Entry {
 		let random_bytes = rand::thread_rng().gen::<[u8; 12]>();
 		let nonce = Nonce::from_slice(&random_bytes);
 
-		let entry = Entry {
+		Self {
 			header: <[u8; 512]>::try_from(header.header_to_bytes()).unwrap(),
 			salt: <[u8; 22]>::try_from(salt.as_bytes()).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap(),
-			ciphertext: cipher.encrypt(nonce, value.as_slice()).unwrap(),
-		};
-
-		return entry
+			ciphertext: cipher.encrypt(nonce, value).unwrap(),
+		}
 	}
 
 	pub fn decrypt(&self, password: &str) -> Vec<u8>{
@@ -48,17 +45,16 @@ impl Entry {
 
 		return cipher.decrypt(nonce, ciphertext.as_slice()).unwrap();
 	}
-	pub fn read_from_file(file: Vec<u8>) -> Self {
+	pub fn serialize_from_file(file: &[u8]) -> Self {
 		let header_and_rest = file.split_at(512);
 		let salt_and_rest = header_and_rest.1.split_at(22);
 		let nonce_and_rest = salt_and_rest.1.split_at(12);
-		let entry = Self {
+		Self {
 			header: <[u8; 512]>::try_from(header_and_rest.0).unwrap(),
 			salt: <[u8; 22]>::try_from(salt_and_rest.0).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce_and_rest.0).unwrap(),
 			ciphertext: Vec::from(nonce_and_rest.1)
-		};
-		return entry
+		}
 	}
 	pub fn create_file(&self) -> Vec<u8> {
 		let mut file = Vec::new();
@@ -66,6 +62,6 @@ impl Entry {
 		file.extend_from_slice(&self.salt);
 		file.extend_from_slice(&self.nonce);
 		file.extend_from_slice(&self.ciphertext);
-		return file
+		file
 	}
 }
