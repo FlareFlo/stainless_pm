@@ -4,18 +4,12 @@ use std::convert::TryFrom;
 pub struct HeaderBinaryV0 {
 	pub version: [u8; 2],
 	pub datatype: [u8; 1],
-
-	pub salt: [u8; 22],
-	pub nonce: [u8; 12],
 }
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
 pub struct HeaderV0 {
 	pub version: u16,
 	pub datatype: DataType,
-
-	pub salt: [u8; 22],
-	pub nonce: [u8; 12],
 }
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
@@ -34,8 +28,6 @@ impl HeaderV0 {
 		let header_binary = HeaderBinaryV0 {
 			version: <[u8; 2]>::try_from(self.version.to_be_bytes()).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_id.to_be_bytes()).unwrap(),
-			salt: self.salt,
-			nonce: self.nonce,
 		};
 		return header_binary;
 	}
@@ -46,13 +38,11 @@ impl HeaderBinaryV0 {
 		let mut output = Vec::new();
 		output.extend_from_slice(&self.version);
 		output.extend_from_slice(&self.datatype);
-		output.extend_from_slice(&self.salt);
-		output.extend_from_slice((&self.nonce));
 		output.resize(512, 0);
 		return output;
 
 	}
-	pub fn pack_header_from_raw(version: u16, length: u16, datatype: DataType, salt: [u8; 22], nonce: [u8; 12]) -> Self {
+	pub fn pack_header_from_raw(version: u16, datatype: DataType) -> Self {
 		let datatype_id: u8;
 		match datatype {
 			DataType::Password => { datatype_id = 0 }
@@ -61,8 +51,6 @@ impl HeaderBinaryV0 {
 		let header = Self {
 			version: <[u8; 2]>::try_from(version.to_be_bytes()).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_id.to_be_bytes()).unwrap(),
-			salt,
-			nonce,
 		};
 		return header;
 	}
@@ -74,8 +62,6 @@ impl HeaderBinaryV0 {
 		let header_binary = HeaderBinaryV0 {
 			version: <[u8; 2]>::try_from(version_and_rest.0).unwrap(),
 			datatype: <[u8; 1]>::try_from(datatype_and_rest.0).unwrap(),
-			salt: <[u8; 22]>::try_from(salt_and_rest.0).unwrap(),
-			nonce: <[u8; 12]>::try_from(nonce_and_rest.0).unwrap(),
 		};
 		return header_binary;
 	}
@@ -89,8 +75,6 @@ impl HeaderBinaryV0 {
 		let header = HeaderV0 {
 			version: u16::from_be_bytes(self.version),
 			datatype,
-			salt: self.salt,
-			nonce: self.nonce,
 		};
 		return header;
 	}
