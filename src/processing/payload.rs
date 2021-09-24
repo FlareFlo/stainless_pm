@@ -10,10 +10,17 @@ use crate::processing::header_v0::{HeaderBinaryV0};
 
 
 pub struct Entry {
-	pub header: [u8; 512],
+	pub header: [u8; 1024],
 	pub salt: [u8; 22],
 	pub nonce: [u8; 12],
 	pub ciphertext: Vec<u8>,
+}
+
+pub struct EntryUnlocked {
+	pub header: [u8; 1024],
+	pub salt: [u8; 22],
+	pub nonce: [u8; 12],
+	pub text: Vec<u8>,
 }
 
 impl Entry {
@@ -28,14 +35,14 @@ impl Entry {
 		let nonce = Nonce::from_slice(&random_bytes);
 
 		Self {
-			header: <[u8; 512]>::try_from(header.header_to_bytes()).unwrap(),
+			header: <[u8; 1024]>::try_from(header.to_bytes()).unwrap(),
 			salt: <[u8; 22]>::try_from(salt.as_bytes()).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce.as_slice()).unwrap(),
 			ciphertext: cipher.encrypt(nonce, value).unwrap(),
 		}
 	}
 
-	pub fn decrypt(&self, password: &str) -> Vec<u8>{
+	pub fn decrypt(&self, password: &str) -> EntryUnlocked{
 		let nonce = Nonce::from_slice(&self.nonce);
 
 		let password_hash = Argon2::default().hash_password(password.as_bytes(), &String::from_utf8(Vec::from(self.salt)).unwrap()).unwrap().hash.unwrap();
@@ -43,20 +50,25 @@ impl Entry {
 
 		let ciphertext = &self.ciphertext;
 
-		return cipher.decrypt(nonce, ciphertext.as_slice()).unwrap();
+		EntryUnlocked {
+			header: self.header,
+			salt: self.salt,
+			nonce: self.nonce,
+			text: cipher.decrypt(nonce, ciphertext.as_slice()).unwrap()
+		}
 	}
-	pub fn serialize_from_file(file: &[u8]) -> Self {
-		let header_and_rest = file.split_at(512);
+	pub fn from_bytes(file: &[u8]) -> Self {
+		let header_and_rest = file.split_at(1024);
 		let salt_and_rest = header_and_rest.1.split_at(22);
 		let nonce_and_rest = salt_and_rest.1.split_at(12);
 		Self {
-			header: <[u8; 512]>::try_from(header_and_rest.0).unwrap(),
+			header: <[u8; 1024]>::try_from(header_and_rest.0).unwrap(),
 			salt: <[u8; 22]>::try_from(salt_and_rest.0).unwrap(),
 			nonce: <[u8; 12]>::try_from(nonce_and_rest.0).unwrap(),
 			ciphertext: Vec::from(nonce_and_rest.1)
 		}
 	}
-	pub fn create_file(&self) -> Vec<u8> {
+	pub fn to_bytes(&self) -> Vec<u8> {
 		let mut file = Vec::new();
 		file.extend_from_slice(&self.header);
 		file.extend_from_slice(&self.salt);
