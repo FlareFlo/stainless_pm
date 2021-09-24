@@ -11,6 +11,7 @@ pub struct HeaderBinaryV0 {
 	pub name: [u8; 32],
 	pub created: [u8; 8],
 	pub edited: [u8; 8],
+	// pub file_ending: [u8; 8] TODO implement file_ending (unsure if needed)
 }
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
