@@ -1,12 +1,9 @@
 use std::fs;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Write};
 use std::os::windows::fs::FileExt;
-use std::process::exit;
 use std::time::Instant;
 
-use chrono::DateTime;
-use sysinfo::{System, SystemExt};
 
 use crate::processing::header_v0::{DataType, HeaderBinaryV0};
 use crate::processing::payload::Entry;
@@ -21,7 +18,7 @@ fn main() {
 fn read_file_in_chunks_and_write() {
 	const BUFFER_SIZE: u64 = 524288 * 2;
 	const BUFF_U: usize = BUFFER_SIZE as usize;
-	let mut file = File::open("./src/assets/old.mp4").unwrap();
+	let file = File::open("./src/assets/old.mp4").unwrap();
 	let mut new_file = File::create("./src/assets/new.mp4").unwrap();
 
 	let file_len = file.metadata().unwrap().len();
@@ -31,7 +28,7 @@ fn read_file_in_chunks_and_write() {
 	for _ in 0..buff_count {
 		let mut buffer = vec![0; BUFF_U];
 		let _ = file.seek_read(&mut buffer, offset).unwrap();
-		new_file.write(&buffer);
+		new_file.write(&buffer).unwrap();
 		offset += BUFFER_SIZE;
 	}
 
@@ -40,7 +37,7 @@ fn read_file_in_chunks_and_write() {
 	let _ = file.seek_read(&mut buffer_last, offset).unwrap();
 	new_file.write(&buffer_last).unwrap();
 
-	assert_eq!(fs::read("./src/assets/old.mp4").unwrap(), fs::read("./src/assets/new.mp4").unwrap())
+	// assert_eq!(fs::read("./src/assets/old.mp4").unwrap(), fs::read("./src/assets/new.mp4").unwrap())
 }
 
 fn encrypt_decrypt_regular() {

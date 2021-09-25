@@ -1,17 +1,17 @@
 use std::convert::TryFrom;
 use std::option::Option::Some;
 
-use chrono::format::Numeric::Timestamp;
 use pad::PadStr;
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
 pub struct HeaderBinaryV0 {
-	pub version: [u8; 2],
-	pub datatype: [u8; 1],
-	pub name: [u8; 32],
-	pub created: [u8; 8],
-	pub edited: [u8; 8],
-	// pub file_ending: [u8; 8] TODO implement file_ending (unsure if needed)
+	pub version: [u8; 2],		//Version indicating which struct to deserialize to (for future)
+	pub datatype: [u8; 1],		//Matched to enum DataType
+	pub name: [u8; 32],			//UTF-8 string with 256 bits capacity (32 generic 16 complex characters)
+	pub created: [u8; 8],		//Create date in seconds after epoch
+	pub edited: [u8; 8],		//Edit date in seconds after epoch
+	// pub file_ending: [u8; 8] TODO When datatype != 0 is required
+	// pub buffer_size: [u8; 8] TODO when required, store buffer size for decoding purposes (maybe have buffer size = cypher length when not used?)
 }
 
 #[derive(Clone, Hash, Debug, Eq, Ord, PartialOrd, PartialEq)]
