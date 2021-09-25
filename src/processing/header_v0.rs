@@ -46,9 +46,9 @@ impl HeaderBinaryV0 {
 		}
 	}
 
-	pub fn from_parameters(datatype: &DataType, name: &str, create: Option<i64>) -> Self {
+	pub fn from_parameters(datatype: &DataType, name: &str, old_create_date: Option<i64>) -> Self {
 		let mut create_date = chrono::Local::now().timestamp();
-		if let Some(create) = create {
+		if let Some(create) = old_create_date {
 			create_date = create;
 		}
 
