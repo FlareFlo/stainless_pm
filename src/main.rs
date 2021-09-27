@@ -1,5 +1,4 @@
 use std::fs;
-
 use std::time::Instant;
 
 use crate::processing::header_v0::{DataType, HeaderBinaryV0, HeaderV0};
@@ -15,7 +14,7 @@ fn main() {
 fn encrypt_decrypt_regular() {
 	let start = Instant::now();
 	let header = HeaderBinaryV0::from_parameters(&DataType::File, "Warthunder", None, "new", 100000);
-	let data = fs::read("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap();
+	let data = fs::read("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap(); //local, use any
 	let entry = Entry::encrypt(&data, &header, "cum");
 	fs::write("./src/assets/file.slpm", entry.to_bytes()).unwrap();
 	println!("{:?}", start.elapsed());
