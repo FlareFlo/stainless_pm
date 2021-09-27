@@ -31,23 +31,26 @@ fn read_file_in_chunks_and_write() {
 	let file_len = file.metadata().unwrap().len();
 	let mut offset = 0;
 	let buff_count = file_len / BUFFER_SIZE;
-	let mut buffer = vec![0; BUFF_U];
+	let mut buffer = [0; BUFF_U];
 
 	for _ in 0..buff_count {
 		#[cfg(target_family = "unix")]
-		let _ = file.read_exact_at(&mut buffer, offset).unwrap();
+			let _ = file.read_exact_at(&mut buffer, offset).unwrap();
 		#[cfg(target_family = "windows")]
-		let _ = file.seek_read(&mut buffer, offset).unwrap();
+			let _ = file.seek_read(&mut buffer, offset).unwrap();
+
 		new_file.write(&buffer).unwrap();
 		offset += BUFFER_SIZE;
 	}
 
 	let remain = file_len - offset;
 	let mut buffer_last = vec![0; remain as usize];
+
 	#[cfg(target_family = "unix")]
-	let _ = file.read_exact_at(&mut buffer_last, offset).unwrap();
+		let _ = file.read_exact_at(&mut buffer_last, offset).unwrap();
 	#[cfg(target_family = "windows")]
-	let _ = file.seek_read(&mut buffer_last, offset).unwrap();
+		let _ = file.seek_read(&mut buffer_last, offset).unwrap();
+
 	new_file.write(&buffer_last).unwrap();
 
 	// assert_eq!(fs::read("./src/assets/old.mp4").unwrap(), fs::read("./src/assets/new.mp4").unwrap())
