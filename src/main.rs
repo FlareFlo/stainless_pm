@@ -1,9 +1,9 @@
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-#[cfg(target_os = "linux")]
+#[cfg(target_family = "unix")]
 use std::os::unix::fs::FileExt;
-#[cfg(target_os = "windows")]
+#[cfg(target_family = "windows")]
 use std::os::windows::fs::FileExt;
 
 use std::time::Instant;
@@ -15,11 +15,14 @@ mod processing;
 
 
 fn main() {
-	read_file_in_chunks_and_write();
+	let start = Instant::now();
+	for _ in 0..10 {
+		read_file_in_chunks_and_write();
+	}
+	println!("{:?}", start.elapsed());
 }
 
 fn read_file_in_chunks_and_write() {
-	let start = Instant::now();
 	const BUFFER_SIZE: u64 = 100000;
 	const BUFF_U: usize = BUFFER_SIZE as usize;
 	let file = File::open("./src/assets/100MB.bin").unwrap();
@@ -28,12 +31,12 @@ fn read_file_in_chunks_and_write() {
 	let file_len = file.metadata().unwrap().len();
 	let mut offset = 0;
 	let buff_count = file_len / BUFFER_SIZE;
+	let mut buffer = vec![0; BUFF_U];
 
 	for _ in 0..buff_count {
-		let mut buffer = vec![0; BUFF_U];
-		#[cfg(target_os = "linux")]
+		#[cfg(target_family = "unix")]
 		let _ = file.read_exact_at(&mut buffer, offset).unwrap();
-		#[cfg(target_os = "windows")]
+		#[cfg(target_family = "windows")]
 		let _ = file.seek_read(&mut buffer, offset).unwrap();
 		new_file.write(&buffer).unwrap();
 		offset += BUFFER_SIZE;
@@ -41,12 +44,11 @@ fn read_file_in_chunks_and_write() {
 
 	let remain = file_len - offset;
 	let mut buffer_last = vec![0; remain as usize];
-	#[cfg(target_os = "linux")]
+	#[cfg(target_family = "unix")]
 	let _ = file.read_exact_at(&mut buffer_last, offset).unwrap();
-	#[cfg(target_os = "windows")]
+	#[cfg(target_family = "windows")]
 	let _ = file.seek_read(&mut buffer_last, offset).unwrap();
 	new_file.write(&buffer_last).unwrap();
-	println!("{:?}", start.elapsed());
 
 	// assert_eq!(fs::read("./src/assets/old.mp4").unwrap(), fs::read("./src/assets/new.mp4").unwrap())
 }
