@@ -12,3 +12,5 @@ rand = "0.8.4"
 chrono = "0.4.19"
 pad = "0.1.6"
 sysinfo = "0.20.3"
+#slpm-file = "0.1.0"
+slpm-file = { path = "/home/flareflo/CLionProjects/slpm-file"}

@@ -1,10 +1,9 @@
 use std::fs;
 use std::time::Instant;
-
-use crate::processing::header_v0::{DataType, HeaderBinaryV0, HeaderV0};
-use crate::processing::payload::Entry;
-
-mod processing;
+use slpm_file::header_v0::{HeaderBinaryV0, DataType, HeaderV0};
+use slpm_file::payload::Entry;
+// use slpm_file::header_v0::{DataType, HeaderBinaryV0, HeaderV0};
+// use slpm_file::payload::Entry;
 
 
 fn main() {
