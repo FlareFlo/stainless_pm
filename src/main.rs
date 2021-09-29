@@ -1,13 +1,37 @@
 use std::fs;
+use std::fs::File;
+use std::io::Write;
+use std::os::windows::fs::FileExt;
 use std::time::Instant;
-use slpm_file::header_v0::HeaderV0;
-use slpm_file::header_binary_v0::HeaderBinaryV0;
-use slpm_file::payload::Entry;
+
+use slpm_file::chunk_management::BufferReader;
 use slpm_file::datatype::DataType;
+use slpm_file::header_binary_v0::HeaderBinaryV0;
+use slpm_file::header_v0::HeaderV0;
+use slpm_file::payload::Entry;
 
 fn main() {
-	encrypt_decrypt_regular();
+	test();
 }
+
+fn test() {
+	let mut buffer_reader = BufferReader::new(File::open("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap(), 500_000);
+
+	let file = &buffer_reader.file;
+	let file_len = file.metadata().unwrap().len();
+
+	let buff_count = file_len / &buffer_reader.buffer_size;
+
+	let mut new_file = File::create("./src/assets/new.mp4").unwrap();
+
+	for _ in 0..buff_count {
+		buffer_reader.write_next();
+		new_file.seek_write(&buffer_reader.buffer, buffer_reader.offset).unwrap();
+	}
+
+	println!("{:?}", fs::read("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap().split_at((file_len - 10) as usize).1);
+}
+
 
 fn encrypt_decrypt_regular() {
 	let start = Instant::now();
