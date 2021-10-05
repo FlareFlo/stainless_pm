@@ -15,21 +15,19 @@ fn main() {
 }
 
 fn test() {
-	let mut buffer_reader = BufferReader::new(File::open("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap(), 500_000);
+	let mut old_file = BufferReader::new(File::open("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap(), 500_000);
+	let mut new_file = BufferReader::new(File::create("./src/assets/new.mp4").unwrap(), 500_000);
 
-	let file = &buffer_reader.file;
-	let file_len = file.metadata().unwrap().len();
+	let file = &old_file.file;
+	old_file.file_len = file.metadata().unwrap().len();
+	let buff_count = old_file.file_len / &old_file.buffer_size;
 
-	let buff_count = file_len / &buffer_reader.buffer_size;
-
-	let mut new_file = File::create("./src/assets/new.mp4").unwrap();
-
-	for _ in 0..buff_count {
-		buffer_reader.write_next();
-		new_file.seek_write(&buffer_reader.buffer, buffer_reader.offset).unwrap();
+	for _ in 0..=buff_count {
+		let result = old_file.read_next();
+		new_file = new_file.write_next(result.as_slice());
 	}
 
-	println!("{:?}", fs::read("./src/assets/War Thunder 2021.09.27 - 14.44.20.02.DVR_Trim.mp4").unwrap().split_at((file_len - 10) as usize).1);
+	assert_eq!(old_file.file.metadata().unwrap().len(), new_file.file.metadata().unwrap().len());
 }
 
 
