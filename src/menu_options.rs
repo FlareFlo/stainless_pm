@@ -30,7 +30,7 @@ pub fn init(entries: Vec<Entry>) {
 
 	match line.trim() {
 		"1" => { list_entries(entries) }
-		"2" => { new_password() }
+		"3" => { new_password() }
 		_ => {}
 	}
 }
