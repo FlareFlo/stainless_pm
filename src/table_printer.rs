@@ -1,6 +1,6 @@
 use std::time::{Duration, UNIX_EPOCH};
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, TimeZone, Utc};
 use pad::PadStr;
 use slpm_file::datatype::DataType;
 use slpm_file::header_v0::HeaderV0;
@@ -40,13 +40,14 @@ pub fn print_table(headers: Vec<HeaderV0>) {
 						 "".pad_to_width(lengths[5])
 	);
 	println!("{}", header);
+	println!("{}", "".pad_to_width_with_char(lengths.iter().sum::<usize>() * 2, '─'));
 	for header in headers.clone() {
 		let system_time_cr = UNIX_EPOCH + Duration::from_secs(header.created);
-		let datetime_cr = DateTime::<Utc>::from(system_time_cr);
+		let datetime_cr = DateTime::<Local>::from(system_time_cr);
 		let timestamp_str_cr = datetime_cr.format("%Y-%m-%d %H:%M:%S").to_string();
 
 		let system_time_ed = UNIX_EPOCH + Duration::from_secs(header.edited);
-		let datetime_ed = DateTime::<Utc>::from(system_time_ed);
+		let datetime_ed = DateTime::<Local>::from(system_time_ed);
 		let timestamp_str_ed = datetime_ed.format("%Y-%m-%d %H:%M:%S").to_string();
 
 		let td = format!("{}|{}|{}|{}|{}|{}",
