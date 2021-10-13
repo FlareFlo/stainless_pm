@@ -40,7 +40,7 @@ pub fn print_table(headers: Vec<HeaderV0>) {
 						 "".pad_to_width(lengths[5])
 	);
 	println!("{}", header);
-	println!("{}", "".pad_to_width_with_char(lengths.iter().sum::<usize>() * 2, '─'));
+	println!("{}", "".pad_to_width_with_char(header.len(), '─'));
 	for header in headers.clone() {
 		let system_time_cr = UNIX_EPOCH + Duration::from_secs(header.created);
 		let datetime_cr = DateTime::<Local>::from(system_time_cr);
