@@ -8,7 +8,7 @@ use slpm_file::header_binary_v0::HeaderBinaryV0;
 use slpm_file::header_v0::HeaderV0;
 use slpm_file::payload::Entry;
 
-use crate::manager::create_password_entry;
+use crate::manager::{create_password_entry, read_password_entry};
 use crate::table_printer::print_table;
 
 pub struct MenuOptions {
@@ -31,6 +31,10 @@ pub fn init(entries: Vec<Entry>) {
 	match line.trim() {
 		"1" => { list_entries(entries) }
 		"3" => { new_password() }
+		"2" => {
+			list_entries(entries);
+			read_password()
+		}
 		_ => {}
 	}
 }
@@ -38,7 +42,7 @@ pub fn init(entries: Vec<Entry>) {
 fn list_entries(mut entries: Vec<Entry>) {
 	let directory = fs::read_dir("./src/data").unwrap();
 	for (i, value) in directory.enumerate() {
-		let reader= fs::read(format!("./src/data/{}", value.unwrap().file_name().into_string().unwrap())).unwrap();
+		let reader = fs::read(format!("./src/data/{}", value.unwrap().file_name().into_string().unwrap())).unwrap();
 		entries.push(Entry::from_bytes(&reader, true));
 	}
 	let mut headers: Vec<HeaderV0> = vec![];
@@ -46,16 +50,27 @@ fn list_entries(mut entries: Vec<Entry>) {
 		headers.push(HeaderV0::from_binary_header(&HeaderBinaryV0::from_bytes(&entry.header)));
 	}
 	print_table(headers);
-	// println!("{}", "Name Type Create-date");
-	// for entry in entries {
-	// 	let header = HeaderV0::from_binary_header(&HeaderBinaryV0::from_bytes(&entry.header));
-	//
-	// 	let system_time = UNIX_EPOCH + Duration::from_secs(header.created);
-	// 	let datetime = DateTime::<Utc>::from(system_time);
-	// 	let timestamp_str = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
-	//
-	// 	println!("{} {:?} {}", header.name.trim(), header.datatype, timestamp_str);
-	// }
+}
+
+fn read_password() {
+	println!("{}", "Name");
+	let mut name = "".to_owned();
+
+	io::stdin()
+		.read_line(&mut name)
+		.expect("failed to read from stdin");
+
+	println!("{}", "password");
+	let mut password = "".to_owned();
+
+	io::stdin()
+		.read_line(&mut password)
+		.expect("failed to read from stdin");
+
+	let path = format!("./src/data/{}.slpm", name.trim());
+	let entry = fs::read(path).unwrap();
+	let content = read_password_entry(&entry, &password.trim());
+	println!("{}", content);
 }
 
 fn new_password() {

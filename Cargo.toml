@@ -16,9 +16,5 @@ sysinfo = "0.20.3"
 # Not used since the Crates.io version is not up-to-date
 #slpm-file = "0.1.0"
 
-# OS specific local imports thanks to local developement
-[target.'cfg(unix)'.dependencies]
-slpm-file = { path = "/home/flareflo/CLionProjects/slpm-file"}
-
-[target.'cfg(windows)'.dependencies]
-#slpm-file = { path = "C:\\Users\\flori\\CLionProjects\\slpm-file"}
+# Local import for developement
+slpm-file = { path = "../slpm-file"}
